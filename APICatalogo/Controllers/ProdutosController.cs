@@ -52,8 +52,8 @@ namespace APICatalogo.Controllers
             return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId}, produto);
         }
 
-        [HttpPut]
-        public ActionResult Put(int id, Produto produto)
+        [HttpPut("{id}")]
+        public ActionResult Put(int id, [FromBody] Produto produto)
         {
             if (id != produto.ProdutoId)
             {
