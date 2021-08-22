@@ -23,7 +23,16 @@ namespace APICatalogo.Controllers
         [HttpGet("produtos")]
         public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
         {
-            return _context.Categorias.Include(c=> c.Produtos).ToList();
+            try
+            {
+                return _context.Categorias.Include(c => c.Produtos).ToList();
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar obter as categorias do banco de dados");
+            }            
         }
 
         [HttpGet]
@@ -73,7 +82,6 @@ namespace APICatalogo.Controllers
             }
             catch (Exception)
             {
-
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar criar uma nova categoria");
             }
