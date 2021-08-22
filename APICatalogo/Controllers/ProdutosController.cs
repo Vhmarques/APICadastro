@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using APICatalogo.Context;
+using APICatalogo.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using APICatalogo.Context;
-using APICatalogo.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace APICatalogo.Controllers
 {
@@ -27,7 +25,7 @@ namespace APICatalogo.Controllers
             return _context.Produtos.AsNoTracking().ToList();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name ="ObterProduto")]
         public ActionResult<Produto> Get(int id)
         {
             var produto = _context.Produtos.AsNoTracking()
@@ -37,6 +35,47 @@ namespace APICatalogo.Controllers
             {
                 return NotFound();
             }
+            return produto;
+        }
+
+        [HttpPost]
+        public ActionResult Post([FromBody] Produto produto)
+        {
+            // Validação do objeto, agora automático no framework
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
+            _context.Produtos.Add(produto);
+            _context.SaveChanges();
+            return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId}, produto);
+        }
+
+        [HttpPut]
+        public ActionResult Put(int id, Produto produto)
+        {
+            if (id != produto.ProdutoId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(produto).State = EntityState.Modified;
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult<Produto> Delete(int id)
+        {
+            var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+
+            if (produto == null)
+            {
+                return NotFound();
+            }
+            _context.Produtos.Remove(produto);
+            _context.SaveChanges();
             return produto;
         }
     }
