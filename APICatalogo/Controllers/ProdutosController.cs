@@ -1,8 +1,7 @@
-﻿using APICatalogo.Context;
-using APICatalogo.Models;
+﻿using APICatalogo.Models;
+using APICatalogo.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +12,17 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class ProdutosController : ControllerBase
     {
-        private readonly CatalogoDbContext _context;
+        private readonly IUnityOfWork _context;
 
-        public ProdutosController(CatalogoDbContext context)
+        public ProdutosController(IUnityOfWork context)
         {
             _context = context;
+        }
+
+        [HttpGet("menorpreco")]
+        public ActionResult<IEnumerable<Produto>> GetProdutosPrecos()
+        {
+            return _context.ProdutoRepository.GetProdutoPorPreco().ToList();
         }
 
         [HttpGet]
@@ -25,7 +30,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                return _context.Produtos.AsNoTracking().ToList();
+                return _context.ProdutoRepository.Get().ToList();
             }
             catch (Exception)
             {
@@ -41,8 +46,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var produto = _context.Produtos.AsNoTracking()
-                .FirstOrDefault(p => p.ProdutoId == id);
+                var produto = _context.ProdutoRepository.GetById(p => p.ProdutoId == id);
 
                 if (produto == null)
                 {
@@ -65,8 +69,8 @@ namespace APICatalogo.Controllers
             try
             {
 
-                _context.Produtos.Add(produto);
-                _context.SaveChanges();
+                _context.ProdutoRepository.Add(produto);
+                _context.Commit();
                 return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId }, produto);
             }
             catch (Exception)
@@ -86,8 +90,8 @@ namespace APICatalogo.Controllers
                     return BadRequest();
                 }
 
-                _context.Entry(produto).State = EntityState.Modified;
-                _context.SaveChanges();
+                _context.ProdutoRepository.Update(produto);
+                _context.Commit();
                 return Ok();
             }
             catch (Exception)
@@ -104,14 +108,14 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+                var produto = _context.ProdutoRepository.GetById(p => p.ProdutoId == id);
 
                 if (produto == null)
                 {
                     return NotFound();
                 }
-                _context.Produtos.Remove(produto);
-                _context.SaveChanges();
+                _context.ProdutoRepository.Delete(produto);
+                _context.Commit();
                 return produto;
             }
             catch (Exception)
