@@ -1,5 +1,6 @@
 ﻿using APICatalogo.Context;
 using APICatalogo.Models;
+using APICatalogo.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +14,9 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class CategoriasController : ControllerBase
     {
-        private readonly CatalogoDbContext _context;
+        private readonly IUnityOfWork _context;
 
-        public CategoriasController(CatalogoDbContext context)
+        public CategoriasController(IUnityOfWork context)
         {
             _context = context;                
         }
@@ -25,7 +26,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                return _context.Categorias.Include(c => c.Produtos).ToList();
+                return _context.CategoriaRepository.GetCategoriasProdutos().ToList();
             }
             catch (Exception)
             {
@@ -40,7 +41,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                return _context.Categorias.AsNoTracking().ToList();
+                return _context.CategoriaRepository.Get().ToList();
             }
             catch (Exception)
             {
@@ -55,7 +56,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _context.Categorias.AsNoTracking().FirstOrDefault(c => c.CategoriaId == id);
+                var categoria = _context.CategoriaRepository.GetById(c => c.CategoriaId == id);
                 if (categoria == null)
                 {
                     return NotFound($"A categoria com o id= {id} não foi encontrada");
@@ -76,8 +77,8 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                _context.Categorias.Add(categoria);
-                _context.SaveChanges();
+                _context.CategoriaRepository.Add(categoria);
+                _context.Commit();
                 return new CreatedAtRouteResult("ObterCategoria", new { id = categoria.CategoriaId }, categoria);
             }
             catch (Exception)
@@ -97,8 +98,8 @@ namespace APICatalogo.Controllers
                 {
                     return BadRequest($"Não foi possível atualizar a categoria com o id= {id}");
                 }
-                _context.Entry(categoria).State = EntityState.Modified;
-                _context.SaveChanges();
+                _context.CategoriaRepository.Update(categoria);
+                _context.Commit();
                 return Ok($"Categoria com o id= {id} foi atualizada com sucesso");
             }
             catch (Exception)
@@ -115,13 +116,13 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _context.Categorias.FirstOrDefault(c => c.CategoriaId == id);
+                var categoria = _context.CategoriaRepository.GetById(c => c.CategoriaId == id);
                 if (categoria == null)
                 {
                     return NotFound($"A categoria com o id= {id} não foi encontrada");
                 }
-                _context.Remove(categoria);
-                _context.SaveChanges();
+                _context.CategoriaRepository.Delete(categoria);
+                _context.Commit();
                 return categoria;
             }
             catch (Exception)
